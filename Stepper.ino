@@ -1,7 +1,6 @@
 
 /*
  This program uses the StepperMRTO library code. 
- The backAndForth routine can be used in a demonstration. It moves the stepper motor back and forth.
  In production mode, the stepper would be commanded by a momentary switch or a remote system command.
  The code has no way of knowing the actual position of the stepper and doesn't need to. It attempts to drive
  the stepper in a known direction, assumes that the move was successful and reports it as such.
