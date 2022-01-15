@@ -1,9 +1,10 @@
 
 /*
- This program uses the StepperMRTO library code in a demonstration. It moves the stepper motor back and forth.
+ This program uses the StepperMRTO library code. 
+ The backAndForth routine can be used in a demonstration. It moves the stepper motor back and forth.
  In production mode, the stepper would be commanded by a momentary switch or a remote system command.
  The code has no way of knowing the actual position of the stepper and doesn't need to. It attempts to drive
- the stepper in a known direction and assumes that the move was successful.
+ the stepper in a known direction, assumes that the move was successful and reports it as such.
 
 
   Pin assignments:
@@ -13,9 +14,9 @@
    A3 (22)  stepper 4 R/G LED
    A4 (23)  LED mux red
    A5 (24)  LED mux green
-   A6 (25)  serial port switch
-   A7 (26)  A7 analog input only
-   D0  (1)  A+ common   
+   A6 (25)  serial port switch  // TBD likely replace this with pressing switch 1 while reseting
+   A7 (26)  A7                  // A6 and A7 are analog input only
+   D0  (1)  A+ common           // The two pins D0, D1 are normally used for serial comm. configMode will set them as such
    D1  (2)  B+ common
    D2  (5)  A- stepper 1
    D3  (6)  B- stepper 1
@@ -59,7 +60,7 @@ StepperMRTO myStepper[] =
  StepperMRTO(stepsPerRevolution, 4, 10, 6, 11),
  StepperMRTO(stepsPerRevolution, 4, 12, 6, 13)};
 
- /*
+ /* These are the ultimate pins
 {StepperMRTO(stepsPerRevolution, 0, 2, 1, 3),
  StepperMRTO(stepsPerRevolution, 0, 4, 1, 5),
  StepperMRTO(stepsPerRevolution, 0, 6, 1, 7),
@@ -67,7 +68,7 @@ StepperMRTO myStepper[] =
  */
  
 void setup() {
-  if (analogRead(A6) > 800) 
+  if (analogRead(A6) > 800) // TBD a better way, hold down switch #1 while reset button pushed
   {
     configMode = true;
     Serial.begin(9600);
@@ -107,7 +108,7 @@ void loop()
 {
   if (configMode) 
   {
-    // show a menu and do some configuration
+    // TBA show a menu and do some configuration
     return;
   }
   
@@ -156,7 +157,7 @@ void setLEDs()
 
   lastTimeStamp = millis();
 
-  if (millis() - lastBlink > 500) 
+  if (millis() - lastBlink > 500) //TBA
     { 
       blinkState = !blinkState;
       lastBlink = millis();
