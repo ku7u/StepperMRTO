@@ -175,7 +175,7 @@ bool StepperMRTO::run(void)
         pinMode(_motorAMinus, INPUT); // for multiplexing, don't want this pin acting as a sink while other coils are active
         pinMode(_motorBMinus, INPUT); // as above, done with these pins for now
         _isRunning = false;
-        return true;                  // TBD maybe return false here? We're done after all
+        return true;
       }
 
         // step the motor to the next of the four steps
