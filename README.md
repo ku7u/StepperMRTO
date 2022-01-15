@@ -1,0 +1,2 @@
+# StepperMRTO
+StepperMRTO provides a means to control a stepper motor to actuate a model railroad turnout (track switch). In particular the stepper to be controlled will be a "micro" variety that is so small that it can be installed on top of the layout next to the track. Traditionally such actuators have never been stepper motors and are usually installed on the underside of the layout. This code is meant to used along with a "sketch" (program) in an Arduino Nano microcontroller.
