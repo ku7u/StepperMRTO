@@ -14,8 +14,8 @@
    A3 (22)  stepper 4 R/G LED
    A4 (23)  LED mux red
    A5 (24)  LED mux green
-   A6 (25)  serial port switch  // TBD likely replace this with pressing switch 1 while reseting
-   A7 (26)  A7                  // A6 and A7 are analog input only
+   A6 (25)  A6 is analog input only
+   A7 (26)  A7 is analog input only
    D0  (1)  A+ common           // The two pins D0, D1 are normally used for serial comm. configMode will set them as such
    D1  (2)  B+ common
    D2  (5)  A- stepper 1
@@ -43,8 +43,7 @@ unsigned long timeStamp;
 bool configMode = false;            // on reset, test pin A6 high to set configuration mode, else normal mode
 
 //switch pins
-const int switchPin[4] = {A1, A2, A3, A4};
-//const int switchPin[4] = {10, 11, 12, 13};
+const int switchPin[4] = {10, 11, 12, 13};
 
 
 //LED pins
@@ -55,21 +54,26 @@ const int ledPin[] = {A0, A1, A2, A3};
 
 // create an array of steppers with common A+ and B+ connections
 StepperMRTO myStepper[] = 
-{StepperMRTO(stepsPerRevolution, 4, 5, 6, 7),
- StepperMRTO(stepsPerRevolution, 4, 8, 6, 9),
- StepperMRTO(stepsPerRevolution, 4, 10, 6, 11),
- StepperMRTO(stepsPerRevolution, 4, 12, 6, 13)};
-
- /* These are the ultimate pins
 {StepperMRTO(stepsPerRevolution, 0, 2, 1, 3),
  StepperMRTO(stepsPerRevolution, 0, 4, 1, 5),
  StepperMRTO(stepsPerRevolution, 0, 6, 1, 7),
  StepperMRTO(stepsPerRevolution, 0, 8, 1, 9)};
- */
  
 void setup() {
-  if (analogRead(A6) > 800) // TBD a better way, hold down switch #1 while reset button pushed
+  // switches
+  for (int i=0; i<numSteppers; i++) pinMode(switchPin[i], INPUT_PULLUP);
+  
+/* TBA
+  // LEDs
+  pinMode (ledRedMuxPin, OUTPUT);
+  pinMode (ledGreenMuxPin, OUTPUT);
+  for (int i=0; i<numSteppers; i++) pinMode(ledPin[i], OUTPUT);
+*/
+
+  // to trigger menu display, hold down switch 0 while resetting the device - reset when done with menu
+  if (digitalRead(switchPin[0]) == LOW) 
   {
+    // do the menu thing TBA
     configMode = true;
     Serial.begin(9600);
     return;
@@ -94,14 +98,7 @@ void setup() {
   // it could be made less through experimentation
  myStepper[0].setStrokeSteps(400);
 
-  // switches
-  for (int i=0; i<numSteppers; i++) pinMode(switchPin[i], INPUT_PULLUP);
-/*
-  // LEDs
-  pinMode (ledRedMuxPin, OUTPUT);
-  pinMode (ledGreenMuxPin, OUTPUT);
-  for (int i=0; i<numSteppers; i++) pinMode(ledPin[i], OUTPUT);
-*/
+
 }
 
 void loop()
@@ -143,7 +140,7 @@ void checkSwitches()
 }
 
 
-void setLEDs()
+void setLEDs() // not complete
 {
   static long lastTimeStamp;
   static long lastBlink;
@@ -197,7 +194,7 @@ void runSteppers()
   // this routine must be called repeatedly in the loop
   for (int i=0; i<numSteppers; i++)
   {
-    if (myStepper[i].run()) return;  // returns false if not in running state, if it did run don't run any others
+    if (myStepper[i].run()) return;  // returns false if not in running state, if it did run don't try to run any others
   }
   
   // if we got here nothing was running so check for steppers that are ready and set the first found to run
@@ -208,32 +205,6 @@ void runSteppers()
       // the first one we find that is ready we set to run and then exit
       myStepper[i].run();
       return;
-    }
-  }
-}
-
-void backAndForth(int deviceID)
-{
-  // this demo loop just toggles back and forth for testing
-  // WARNING - call this only once for one device in the loop
-  // do not run anything else in the loop
-
-  unsigned long delta;
-  bool running;
-  
-  if ((deviceID < 0) || (deviceID > 3)) return;
-  
-  if (!myStepper[deviceID].getRunState())
-  // done running, so wait for five seconds from last startime then restart
-  {
-    timeStamp = millis();
-    delta = timeStamp - lastStartTime;
-    
-    if (delta > 5000)
-    {
-      direction = !direction;
-      myStepper[deviceID].setReady(direction);  
-      lastStartTime = timeStamp;    
     }
   }
 }
