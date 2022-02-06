@@ -6,7 +6,7 @@
  the stepper in a known direction, assumes that the move was successful and reports it as such.
 
  Device can be configured in place by the user using a menu (TBD). A phone or tablet running a serial app can be
- used. Or the device can be removed and attached to a computer. Device must be removed from socket when downloading the entire program. 
+ used. Or the device can be removed and attached to a computer. Device must be removed from socket when downloading the entire program.
 
 
   Pin assignments:
@@ -15,7 +15,7 @@
    A1  stepper 2 switch
    A2  stepper 3 switch
    A3  stepper 4 switch
-   A4  LED mux red - connect to cathode of all red LED, active low, also serial in config mode          
+   A4  LED mux red - connect to cathode of all red LED, active low, also serial in config mode
    A5  LED mux green - connect to cathode of all green LED, active low, also serial in config mode
    A6  A6 is analog input only
    A7  A7 is analog input only
@@ -99,7 +99,7 @@ void setup()
   }
 
   // set the rotational speed using rpm as parameter, defaults to 1000 rpm
-    myStepper[3].setSpeed(500);
+  myStepper[3].setSpeed(500);
 
   // configure the direction
   // also can reverse the wires on one coil instead
@@ -164,56 +164,44 @@ void checkSwitches()
 
 void setLEDs() // not complete
 {
-  enum color_t
-  {
-    RED,
-    GREEN,
-    UNK
-  };
-  static color_t color = GREEN;
   static long lastTimeStamp;
   static long lastBlink;
+  static uint8_t currentLED = 0;
   bool state;
   static bool blinkState;
 
-  // multiplex the LEDs at a relatively slow rate, 25 ms should be fast enough to prevent flicker
-  if (millis() - lastTimeStamp < 25)
-    return;
-
   lastTimeStamp = millis();
 
-  if (millis() - lastBlink > 100) // TBA
+  if (millis() - lastBlink > 50) // TBA
   {
     blinkState = !blinkState;
     lastBlink = millis();
   }
 
-  if (color == GREEN)
+  for (int i = 0; i < numSteppers; i++)
+    digitalWrite(ledPin[i], LOW); // turn them all off briefly
+
+  if (myStepper[currentLED].getLastCommanded() == 0) // TBD this with respect to reversed
   {
-    // get the status of each stepper
-    for (int i = 0; i < numSteppers; i++)
-    {
-      // if position[i] = unknown
-      // state = blinkState;
-      // else
-      state = myStepper[i].getLastCommanded() && !myStepper[i].getRunState(); // if running show dark
-      digitalWrite(ledPin[i], !state);                                        // TBD may need to be reversed if direction has been reversed
-    }
+    // display red
     digitalWrite(ledGreenMuxPin, HIGH);
     digitalWrite(ledRedMuxPin, LOW);
-    color = RED;
   }
   else
   {
-    for (int i = 0; i < numSteppers; i++)
-    {
-      state = !myStepper[i].getLastCommanded() && !myStepper[i].getRunState(); // if running show dark
-      digitalWrite(ledPin[i], state);                                          // TBD may need to be reversed if direction has been reversed
-    }
+    // display green
     digitalWrite(ledGreenMuxPin, LOW);
     digitalWrite(ledRedMuxPin, HIGH);
-    color = GREEN;
   }
+
+  if (myStepper[currentLED].getRunState()) // TBD might want to add ready state to this
+    digitalWrite(ledPin[currentLED], blinkState); // blinking while moving or TBD ready to move
+  else
+    digitalWrite(ledPin[currentLED], HIGH); // common anodes
+
+  currentLED++;
+  if (currentLED == 4)
+    currentLED = 0;
 }
 
 void runSteppers()
