@@ -38,70 +38,70 @@
 #include <Arduino.h>
 
 // library interface description
-class StepperMRTO {
-  public:
-    // constructors:
-    StepperMRTO(int stepsPerRevolution, int motorAPlus, int motorAMinus,
-                                 int motorBPlus, int motorBMinus);
+class StepperMRTO
+{
+public:
+  // constructors:
+  StepperMRTO(int stepsPerRevolution, int motorAPlus, int motorAMinus,
+              int motorBPlus, int motorBMinus);
 
-    // speed setter method:
-    void setSpeed(long rpmSpeed);
+  // speed setter method:
+  void setSpeed(long rpmSpeed);
 
-    // set the magnitude of the stroke in steps
-    void setStrokeSteps(int strokeSteps);
+  // set the magnitude of the stroke in steps
+  void setStrokeSteps(int strokeSteps);
 
-    // start method primes the code to run on subsequent loops
-    // either a button push or a remote command could call this
-    void setReady(bool direction);
+  // start method primes the code to run on subsequent loops
+  // either a button push or a remote command could call this
+  void setReady(bool direction);
 
-    // repeatedly called in the loop
-    bool run(void);
+  // repeatedly called in the loop
+  bool run(void);
 
-    // set current to zero at end of stroke to prevent stressing output pin
-    void release(void);
+  // set current to zero at end of stroke to prevent stressing output pin
+  void release(void);
 
-    // limit length of individual step to control torque
-    void setTorqueLimit(unsigned long stepLimit);
+  // limit length of individual step to control torque
+  void setTorqueLimit(unsigned long stepLimit);
 
-    //check running state, running or not
-    bool getRunState();
+  //check running state, running or not
+  bool getRunState();
 
-    //get ready to run state
-    bool getReadyState();
+  //get ready to run state
+  bool getReadyState();
 
-    // set the default run direction
-    void setReversed(bool reversed);
+  // set the default run direction
+  void setReversed(bool reversed);
 
-    // report the last position
-    int getLastCommanded();
+  // report the last position
+  int getLastCommanded();
 
-    int version(void);
+  int version(void);
 
-  private:
-    void stepMotor(int this_step);
+private:
+  void stepMotor(int this_step);
 
-    bool _direction;                // Direction of rotation
-    unsigned long _stepInterval;   // delay between steps, in ms, based on speed
-    unsigned long _torqueInterval; // shortened interval to reduce torque and average current
-    unsigned long _now;
-    bool _isRunning;
-    bool _readyToRun;
-    bool _currentDirection;
-    int _strokeSteps;               // steps to take in this run
-    int _currentStep;              // which step the motor is on
-    int _stepsLeftToGo;
-    int _stepsPerRevolution;
-    int _lastCommanded;              
-    bool _reversed;
+  bool _direction;          // Direction of rotation
+  uint16_t _stepInterval;   // delay between steps, in ms, based on speed
+  uint16_t _torqueInterval; // shortened interval to reduce torque and average current
+  uint16_t _strokeSteps;    // steps to take in this run
+  unsigned long _now;
+  unsigned long _lastStepStartTime; // time stamp in us of when the last step was started
+  bool _isRunning;
+  bool _readyToRun;
+  bool _currentDirection;
+  int _currentStep; // which step the motor is on
+  int _stepsLeftToGo;
+  int _stepsPerRevolution;
+  int _lastCommanded;
+  bool _reversed;
 
-    // motor pin numbers:
-    int _motorAPlus;
-    int _motorAMinus;
-    int _motorBPlus;
-    int _motorBMinus;
+  // motor pin numbers:
+  int _motorAPlus;
+  int _motorAMinus;
+  int _motorBPlus;
+  int _motorBMinus;
 
-    unsigned long _lastStepStartTime; // time stamp in us of when the last step was started
 };
 
 #endif
-

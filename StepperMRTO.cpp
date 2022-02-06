@@ -57,9 +57,9 @@ StepperMRTO::StepperMRTO(int stepsPerRevolution, int motorAPlus, int motorAMinus
 
   // setup the pins on the microcontroller:
   pinMode(_motorAPlus, OUTPUT);
-  pinMode(_motorAMinus, INPUT); // for multiplexing, set to output in run routine
+  pinMode(_motorAMinus, INPUT); // for multiplexing, assures no current flow when not running, set to output in run routine
   pinMode(_motorBPlus, OUTPUT);
-  pinMode(_motorBMinus, INPUT); // for multiplexing, set to output in run routine
+  pinMode(_motorBMinus, INPUT); // for multiplexing, assures no current flow when not running, set to output in run routine
 
   // set the default step interval that results in 1000 rpm
   _stepInterval = 60L * 1000L * 1000L / _stepsPerRevolution / 1000;
@@ -123,7 +123,7 @@ void StepperMRTO::setReady(bool direction)
 // called repeatedly by loop code
 bool StepperMRTO::run(void)
 {
-  // return false if not currently running or ready to run
+  // return false if not currently running and not ready to run
   if (!(_readyToRun || _isRunning)) return false;
   else
   {
