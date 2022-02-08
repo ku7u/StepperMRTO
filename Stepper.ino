@@ -5,7 +5,7 @@
  The code has no way of knowing the actual position of the stepper and doesn't need to. It attempts to drive
  the stepper in a known direction, assumes that the move was successful and reports it as such.
 
- Device can be configured in place by the user using a menu (TBD). A phone or tablet running a serial app can be
+ Device can be configured in place by the user using a menu. A phone or tablet running a serial app can be
  used. Or the device can be removed and attached to a computer. Device must be removed from socket when downloading the entire program.
 
 
@@ -39,32 +39,32 @@
 #include <EEPROM.h>
 #include "StepperMRTO.h"
 
-const int numSteppers = 4;
-const int stepsPerRevolution = 20; // number of steps per revolution
+uint16_t const numSteppers = 4;
+uint16_t const stepsPerRevolution = 20; // number of steps per revolution
 bool direction = true;             // when true travels in one direction, when false the other
-unsigned long lastStartTime = 0;
-unsigned long timeStamp;
+uint32_t  lastStartTime = 0;
+uint32_t  timeStamp;
 bool configMode = false; // on reset, test switch 0 low to set configuration mode, else normal mode
 
 // motor pins
-const int APlusPin = 0;
-const int BPlusPin = 1;
-const int AMinus1Pin = 2;
-const int BMinus1Pin = 3;
-const int AMinus2Pin = 4;
-const int BMinus2Pin = 5;
-const int AMinus3Pin = 6;
-const int BMinus3Pin = 7;
-const int AMinus4Pin = 8;
-const int BMinus4Pin = 9;
+uint16_t const APlusPin = 0;
+uint16_t const BPlusPin = 1;
+uint16_t const AMinus1Pin = 2;
+uint16_t const BMinus1Pin = 3;
+uint16_t const AMinus2Pin = 4;
+uint16_t const BMinus2Pin = 5;
+uint16_t const AMinus3Pin = 6;
+uint16_t const BMinus3Pin = 7;
+uint16_t const AMinus4Pin = 8;
+uint16_t const BMinus4Pin = 9;
 
 // switch pins
-const int switchPin[4] = {A0, A1, A2, A3};
+uint16_t const switchPin[4] = {A0, A1, A2, A3};
 
 // LED pins
-const int ledRedMuxPin = A4;
-const int ledGreenMuxPin = A5;
-const int ledPin[4] = {10, 11, 12, 13};
+uint16_t const ledRedMuxPin = A4;
+uint16_t const ledGreenMuxPin = A5;
+uint16_t const ledPin[4] = {10, 11, 12, 13};
 
 // create an array of steppers with common A+ and B+ connections
 StepperMRTO myStepper[] =
@@ -157,7 +157,7 @@ void loop()
 {
   if (configMode)
   {
-    Serial.begin(115200); // TBD this should be set to require rebooting possibly
+    Serial.begin(115200);
     configure();
     configMode = false;
     Serial.end();
@@ -201,13 +201,10 @@ void checkSwitches()
 
 void setLEDs() // not complete
 {
-  static long lastTimeStamp;
-  static long lastBlink;
+  static uint32_t lastBlink;
   static uint8_t currentLED = 0;
   bool state;
   static bool blinkState;
-
-  lastTimeStamp = millis();
 
   if (millis() - lastBlink > 50) // TBA
   {
@@ -232,7 +229,7 @@ void setLEDs() // not complete
   }
 
   if (myStepper[currentLED].getRunState() || myStepper[currentLED].getReadyState() || notSet[currentLED])
-    digitalWrite(ledPin[currentLED], blinkState); // blinking while moving or TBD ready to move
+    digitalWrite(ledPin[currentLED], blinkState); // blinking while moving or ready to move
   else
     digitalWrite(ledPin[currentLED], HIGH); // common anodes
 
