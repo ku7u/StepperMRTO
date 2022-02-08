@@ -31,12 +31,11 @@
  *
  */
 
-
 #include "StepperMRTO.h"
 
 // Constructor, sets the number of steps per revolution and the pin connections to the windings
 StepperMRTO::StepperMRTO(int stepsPerRevolution, int motorAPlus, int motorAMinus,
-                 int motorBPlus, int motorBMinus)
+                         int motorBPlus, int motorBMinus)
 {
   _isRunning = false;
   _readyToRun = false;
@@ -124,13 +123,14 @@ void StepperMRTO::setReady(bool direction)
 bool StepperMRTO::run(void)
 {
   // return false if not currently running and not ready to run
-  if (!(_readyToRun || _isRunning)) return false;
+  if (!(_readyToRun || _isRunning))
+    return false;
   else
   {
-    if (_stepsLeftToGo == 0)          // just starting
+    if (_stepsLeftToGo == 0) // just starting
     {
-      pinMode(_motorAMinus, OUTPUT);  // for multiplexing, reconfigure as output while active
-      pinMode(_motorBMinus, OUTPUT);  // as above
+      pinMode(_motorAMinus, OUTPUT); // for multiplexing, reconfigure as output while active
+      pinMode(_motorBMinus, OUTPUT); // as above
       _currentDirection = _direction;
       _stepsLeftToGo = _strokeSteps;
       _readyToRun = false;
@@ -169,7 +169,7 @@ bool StepperMRTO::run(void)
       // decrement the steps left to go and test for done
       // _stepsLeftToGo--;
 
-      if (--_stepsLeftToGo == 0)      // done with the stroke if zero
+      if (--_stepsLeftToGo == 0) // done with the stroke if zero
       {
         release();                    // turn off the juice to reduce overheating
         pinMode(_motorAMinus, INPUT); // for multiplexing, don't want this pin acting as a sink while other coils are active
@@ -178,55 +178,55 @@ bool StepperMRTO::run(void)
         return true;
       }
 
-        // step the motor to the next of the four steps
-        stepMotor(_currentStep % 4);
-      }
-    }
-    return true;
-  }
-
-  // moves the motor forward or backwards
-  void StepperMRTO::stepMotor(int thisStep)
-  {
-    switch (thisStep)
-    {
-    case 0: // 1010
-      digitalWrite(_motorAPlus, HIGH);
-      digitalWrite(_motorAMinus, LOW);
-      digitalWrite(_motorBPlus, HIGH);
-      digitalWrite(_motorBMinus, LOW);
-      break;
-    case 1: // 0110
-      digitalWrite(_motorAPlus, LOW);
-      digitalWrite(_motorAMinus, HIGH);
-      digitalWrite(_motorBPlus, HIGH);
-      digitalWrite(_motorBMinus, LOW);
-      break;
-    case 2: //0101
-      digitalWrite(_motorAPlus, LOW);
-      digitalWrite(_motorAMinus, HIGH);
-      digitalWrite(_motorBPlus, LOW);
-      digitalWrite(_motorBMinus, HIGH);
-      break;
-    case 3: //1001
-      digitalWrite(_motorAPlus, HIGH);
-      digitalWrite(_motorAMinus, LOW);
-      digitalWrite(_motorBPlus, LOW);
-      digitalWrite(_motorBMinus, HIGH);
-      break;
+      // step the motor to the next of the four steps
+      stepMotor(_currentStep % 4);
     }
   }
+  return true;
+}
 
-  // remove current from motor
-  void StepperMRTO::release(void)
+// moves the motor forward or backwards
+void StepperMRTO::stepMotor(int thisStep)
+{
+  switch (thisStep)
   {
+  case 0: // 1010
+    digitalWrite(_motorAPlus, HIGH);
+    digitalWrite(_motorAMinus, LOW);
+    digitalWrite(_motorBPlus, HIGH);
+    digitalWrite(_motorBMinus, LOW);
+    break;
+  case 1: // 0110
     digitalWrite(_motorAPlus, LOW);
+    digitalWrite(_motorAMinus, HIGH);
+    digitalWrite(_motorBPlus, HIGH);
+    digitalWrite(_motorBMinus, LOW);
+    break;
+  case 2: //0101
+    digitalWrite(_motorAPlus, LOW);
+    digitalWrite(_motorAMinus, HIGH);
+    digitalWrite(_motorBPlus, LOW);
+    digitalWrite(_motorBMinus, HIGH);
+    break;
+  case 3: //1001
+    digitalWrite(_motorAPlus, HIGH);
     digitalWrite(_motorAMinus, LOW);
     digitalWrite(_motorBPlus, LOW);
-    digitalWrite(_motorBMinus, LOW);
+    digitalWrite(_motorBMinus, HIGH);
+    break;
   }
+}
 
-  int StepperMRTO::version(void)
-  {
-    return 1;
-  }
+// remove current from motor
+void StepperMRTO::release(void)
+{
+  digitalWrite(_motorAPlus, LOW);
+  digitalWrite(_motorAMinus, LOW);
+  digitalWrite(_motorBPlus, LOW);
+  digitalWrite(_motorBMinus, LOW);
+}
+
+int StepperMRTO::version(void)
+{
+  return 1;
+}
