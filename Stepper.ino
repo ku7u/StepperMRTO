@@ -41,9 +41,9 @@
 
 uint16_t const numSteppers = 4;
 uint16_t const stepsPerRevolution = 20; // number of steps per revolution
-bool direction = true;             // when true travels in one direction, when false the other
-uint32_t  lastStartTime = 0;
-uint32_t  timeStamp;
+bool direction = true;                  // when true travels in one direction, when false the other
+uint32_t lastStartTime = 0;
+uint32_t timeStamp;
 bool configMode = false; // on reset, test switch 0 low to set configuration mode, else normal mode
 
 // motor pins
@@ -147,10 +147,9 @@ void setup()
     myStepper[i].setTorqueLimit(eepVal);
 
     // configure the direction
-    // also can reverse the wires on one coil instead
-    // if reversed is set to true the device will pull the throwbar toward itself, false is the default
     // design assumes device is installed on the closed side of turnout and that turnout is closed
     // the first movement after startup will be to pull the throwbar thus throwing the track switch and lighting red LED
+    // setting reversed to true will set motion to the opposite of above as required if machine is located on diverging side
     myStepper[i].setReversed(EEPROM.read((4 * i) + 3));
   }
 }
@@ -208,7 +207,7 @@ void setLEDs() // not complete
   bool state;
   static bool blinkState;
 
-  if (millis() - lastBlink > 50) 
+  if (millis() - lastBlink > 50)
   {
     blinkState = !blinkState;
     lastBlink = millis();
@@ -217,7 +216,7 @@ void setLEDs() // not complete
   for (int i = 0; i < numSteppers; i++)
     digitalWrite(ledPin[i], LOW); // turn them all off briefly
 
-  if (myStepper[currentLED].getLastCommanded() == 1) 
+  if (myStepper[currentLED].getLastCommanded() == 1)
   {
     // display red
     digitalWrite(ledGreenMuxPin, HIGH);
@@ -300,7 +299,7 @@ void configure()
         Serial.print(F("device "));
         Serial.println(devID);
       }
-      eepByte = getNumber(1, 2000)/10;
+      eepByte = getNumber(1, 2000) / 10;
       if (devID == 0)
         for (int i = 0; i < numSteppers; i++)
         {
@@ -326,7 +325,7 @@ void configure()
         Serial.print(F("device "));
         Serial.println(devID);
       }
-      eepByte = getNumber(200, 800)/10;
+      eepByte = getNumber(200, 800) / 10;
       if (devID == 0)
         for (int i = 0; i < numSteppers; i++)
 
@@ -353,7 +352,7 @@ void configure()
         Serial.print(F("device "));
         Serial.println(devID);
       }
-      eepByte = getNumber(800, 2000)/10;
+      eepByte = getNumber(800, 2000) / 10;
       if (devID == 0)
         for (int i = 0; i < numSteppers; i++)
         {
