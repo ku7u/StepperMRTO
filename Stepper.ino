@@ -152,7 +152,6 @@ void setup()
     // design assumes device is installed on the closed side of turnout and that turnout is closed
     // the first movement after startup will be to pull the throwbar thus throwing the track switch and lighting red LED
     myStepper[i].setReversed(EEPROM.read((4 * i) + 3));
- myStepper[i].setReversed(1);
   }
 }
 
@@ -218,7 +217,7 @@ void setLEDs() // not complete
   for (int i = 0; i < numSteppers; i++)
     digitalWrite(ledPin[i], LOW); // turn them all off briefly
 
-  if (myStepper[currentLED].getLastCommanded() == 1) // TBD this with respect to reversed
+  if (myStepper[currentLED].getLastCommanded() == 1) 
   {
     // display red
     digitalWrite(ledGreenMuxPin, HIGH);
