@@ -41,6 +41,7 @@ StepperMRTO::StepperMRTO(int stepsPerRevolution, int motorAPlus, int motorAMinus
   _readyToRun = false;
   _currentStep = 0;                         // which step the motor is on
   _direction = 0;                           // motor direction
+  _lastCommanded = 0;                       
   _lastStepStartTime = 0;                   // time stamp in us of the start of the last step
   _stepsPerRevolution = stepsPerRevolution; // number of steps in one revolution
   _strokeSteps = 700;                       // typical default value for length of stroke
