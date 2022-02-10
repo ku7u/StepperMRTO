@@ -19,8 +19,8 @@
    A5  LED mux green - connect to cathode of all green LED, active low
    A6  A6 is analog input only
    A7  A7 is analog input only
-   D0  A+ common, serial pin when configuring
-   D1  B+ common, serial pin when configuring
+   D0  A+ common, also used as serial pin when displaying configuration menu
+   D1  B+ common, also used as serial pin when displaying configuration menu
    D2  A- stepper 1
    D3  B- stepper 1
    D4  A- stepper 2
@@ -42,8 +42,6 @@
 uint16_t const numSteppers = 4;
 uint16_t const stepsPerRevolution = 20; // number of steps per revolution
 bool direction = true;                  // when true travels in one direction, when false the other
-uint32_t lastStartTime = 0;
-uint32_t timeStamp;
 bool configMode = false; // on reset, test switch 0 low to set configuration mode, else normal mode
 
 // motor pins
@@ -62,9 +60,9 @@ uint16_t const BMinus4Pin = 9;
 uint16_t const switchPin[4] = {A0, A1, A2, A3};
 
 // LED pins
-uint16_t const ledRedMuxPin = A4;
-uint16_t const ledGreenMuxPin = A5;
-uint16_t const ledPin[4] = {10, 11, 12, 13};
+uint16_t const redLEDCathodePin = A4;
+uint16_t const greenLEDCathodePin = A5;
+uint16_t const ledAnodePin[4] = {10, 11, 12, 13};
 
 // create an array of steppers with common A+ and B+ connections
 StepperMRTO myStepper[] =
@@ -79,7 +77,9 @@ uint16_t const NOMINAL_TORQUE_INTERVAL = 1500;
 
 bool notSet[] = {true, true, true, true};
 
+/*****************************************************************************/
 void setup()
+/*****************************************************************************/
 {
   uint16_t initVal;
   uint16_t eepVal;
@@ -90,17 +90,17 @@ void setup()
     pinMode(switchPin[i], INPUT_PULLUP);
 
   // LEDs
-  pinMode(ledRedMuxPin, OUTPUT);
-  pinMode(ledGreenMuxPin, OUTPUT);
-  digitalWrite(ledRedMuxPin, HIGH);
-  digitalWrite(ledGreenMuxPin, HIGH);
+  pinMode(redLEDCathodePin, OUTPUT);
+  pinMode(greenLEDCathodePin, OUTPUT);
+  digitalWrite(redLEDCathodePin, HIGH);
+  digitalWrite(greenLEDCathodePin, HIGH);
   for (int i = 0; i < numSteppers; i++)
   {
-    pinMode(ledPin[i], OUTPUT);
-    digitalWrite(ledPin[i], LOW);
+    pinMode(ledAnodePin[i], OUTPUT);
+    digitalWrite(ledAnodePin[i], LOW);
   }
 
-  // to trigger menu display, hold down switch 0 while resetting the device - reset when done with menu
+  // to trigger menu display, hold down switch 0 while resetting the device
   if (digitalRead(switchPin[0]) == LOW)
     configMode = true;
 
@@ -154,7 +154,9 @@ void setup()
   }
 }
 
+/*****************************************************************************/
 void loop()
+/*****************************************************************************/
 {
   if (configMode)
   {
@@ -162,7 +164,6 @@ void loop()
     configure();
     configMode = false;
     Serial.end();
-    return;
   }
 
   // closed switch will set its device to ready
@@ -175,7 +176,9 @@ void loop()
   setLEDs();
 }
 
+/*****************************************************************************/
 void checkSwitches()
+/*****************************************************************************/
 {
   for (int i = 0; i < numSteppers; i++)
   {
@@ -200,7 +203,9 @@ void checkSwitches()
   }
 }
 
-void setLEDs() // not complete
+/*****************************************************************************/
+void setLEDs() 
+/*****************************************************************************/
 {
   static uint32_t lastBlink;
   static uint8_t currentLED = 0;
@@ -214,31 +219,33 @@ void setLEDs() // not complete
   }
 
   for (int i = 0; i < numSteppers; i++)
-    digitalWrite(ledPin[i], LOW); // turn them all off briefly
+    digitalWrite(ledAnodePin[i], LOW); // turn them all off briefly
 
   if (myStepper[currentLED].getLastCommanded() == 1)
   {
     // display red
-    digitalWrite(ledGreenMuxPin, HIGH);
-    digitalWrite(ledRedMuxPin, LOW);
+    digitalWrite(greenLEDCathodePin, HIGH);
+    digitalWrite(redLEDCathodePin, LOW);
   }
   else
   {
     // display green
-    digitalWrite(ledGreenMuxPin, LOW);
-    digitalWrite(ledRedMuxPin, HIGH);
+    digitalWrite(greenLEDCathodePin, LOW);
+    digitalWrite(redLEDCathodePin, HIGH);
   }
 
   if (myStepper[currentLED].getRunState() || myStepper[currentLED].getReadyState() || notSet[currentLED])
-    digitalWrite(ledPin[currentLED], blinkState); // blinking while moving or ready to move
+    digitalWrite(ledAnodePin[currentLED], blinkState); // blinking while moving or ready to move
   else
-    digitalWrite(ledPin[currentLED], HIGH); // common anodes
+    digitalWrite(ledAnodePin[currentLED], HIGH); // common anodes
 
   if (++currentLED == 4)
     currentLED = 0;
 }
 
+/*****************************************************************************/
 void runSteppers()
+/*****************************************************************************/
 {
   // this routine must be called repeatedly in the loop
   for (int i = 0; i < numSteppers; i++)
@@ -261,8 +268,9 @@ void runSteppers()
 
 /*****************************************************************************/
 void showMenu()
-
+/*****************************************************************************/
 {
+  Serial.println(F(" "));
   Serial.println(F("\nMain menu"));
   Serial.println(F(" Enter: "));
   Serial.println(F(" 'S' - Set speed"));
@@ -276,7 +284,7 @@ void showMenu()
 
 /*****************************************************************************/
 void configure()
-
+/*****************************************************************************/
 {
   uint16_t devID;
   uint8_t eepByte;
