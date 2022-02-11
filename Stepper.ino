@@ -352,7 +352,7 @@ void configure()
       break;
 
     case 'F':
-      Serial.println(F("Force (microseconds, valid value 800 - 2000, default = 1500)"));
+      Serial.println(F("Force (microseconds, valid value 800 - 2550, default = 1500)"));
       Serial.println(F("Enter device (1 - 4) or 0 for all"));
       devID = getNumber(0, 4);
       Serial.print(F("Enter value for "));
