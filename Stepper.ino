@@ -42,7 +42,7 @@
 uint16_t const numSteppers = 4;
 uint16_t const stepsPerRevolution = 20; // number of steps per revolution
 bool direction = true;                  // when true travels in one direction, when false the other
-bool configMode = false; // on reset, test switch 0 low to set configuration mode, else normal mode
+bool configMode = false;                // on reset, test switch 0 low to set configuration mode, else normal mode
 
 // motor pins
 uint16_t const APlusPin = 0;
@@ -204,7 +204,7 @@ void checkSwitches()
 }
 
 /*****************************************************************************/
-void setLEDs() 
+void setLEDs()
 /*****************************************************************************/
 {
   static uint32_t lastBlink;
@@ -250,8 +250,11 @@ void runSteppers()
   // this routine must be called repeatedly in the loop
   for (int i = 0; i < numSteppers; i++)
   {
-    if (myStepper[i].run())
-      return; // returns false if not in running state, if it did run don't try to run any others
+    if (myStepper[i].getRunState()) // returns false if not in running state
+    {
+      myStepper[i].run();
+      return;                       // if it did run don't try to run any others
+    }
   }
 
   // if we got here nothing was running so check for steppers that are ready and set the first found to run
@@ -360,7 +363,7 @@ void configure()
         Serial.print(F("device "));
         Serial.println(devID);
       }
-      eepByte = getNumber(800, 2000) / 10;
+      eepByte = getNumber(800, 2550) / 10;
       if (devID == 0)
         for (int i = 0; i < numSteppers; i++)
         {
