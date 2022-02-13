@@ -212,7 +212,7 @@ void setLEDs()
   bool state;
   static bool blinkState;
 
-  if (millis() - lastBlink > 50)
+  if (millis() - lastBlink > 100)
   {
     blinkState = !blinkState;
     lastBlink = millis();
@@ -253,7 +253,7 @@ void runSteppers()
     if (myStepper[i].getRunState()) // returns false if not in running state
     {
       myStepper[i].run();
-      return;                       // if it did run don't try to run any others
+      return; // if it did run don't try to run any others
     }
   }
 
@@ -280,7 +280,7 @@ void showMenu()
   Serial.println(F(" 'T' - Set throw"));
   Serial.println(F(" 'F' - Set force limit"));
   Serial.println(F(" 'D' - Set direction"));
-  // Serial.println(F(" 'P' - Print status"));
+  Serial.println(F(" 'P' - Print status"));
 
   Serial.println(F("\n Enter 'R' to return to run mode"));
 }
@@ -405,6 +405,23 @@ void configure()
 
     case 'P':
       Serial.println(F("Print current configuration")); // TBD
+      for (int i = 0; i < numSteppers; i++)
+      {
+        Serial.print("Device: ");
+        Serial.print(i+1);
+        Serial.print(" ");
+        eepByte = EEPROM.read(4 * i);
+        Serial.print(eepByte * 10);
+        Serial.print(" ");
+        eepByte = EEPROM.read(4 * i + 1);
+        Serial.print(eepByte * 10);
+        Serial.print(" ");
+        eepByte = EEPROM.read(4 * i + 2);
+        Serial.print(eepByte * 10);
+        Serial.print(" ");
+        eepByte = EEPROM.read(4 * i + 3);
+        Serial.println(eepByte);
+      }
       break;
 
     case 'R':
