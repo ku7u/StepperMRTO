@@ -39,10 +39,11 @@ StepperMRTO::StepperMRTO(int stepsPerRevolution, int motorAPlus, int motorAMinus
 {
   _isRunning = false;
   _readyToRun = false;
-  _currentStep = 0;                         // which step the motor is on
-  _direction = 0;                           // motor direction
-  _lastCommanded = 0;                       
-  _lastStepStartTime = 0;                   // time stamp in us of the start of the last step
+  _currentStep = 0; // which step the motor is on
+  _direction = 0;   // motor direction
+  _lastCommanded = 0;
+  _lastStepStartTime = 0; // time stamp in us of the start of the last step
+  // _lastSliceStartTime = 0;
   _stepsPerRevolution = stepsPerRevolution; // number of steps in one revolution
   _strokeSteps = 700;                       // typical default value for length of stroke
   _torqueInterval = 1800;                   // value derived empirically, value in usecs - effect is to limit the torque and heat
@@ -123,6 +124,16 @@ void StepperMRTO::setReady(bool direction)
 // called repeatedly by loop code
 bool StepperMRTO::run(void)
 {
+  // uint32_t dutyFactor = 50;
+  // uint32_t wholeSlice = 100; //_stepInterval/10;
+  // uint32_t onSlice = wholeSlice * dutyFactor / 100;
+  // uint32_t offSlice = wholeSlice * (100 - dutyFactor) / 100;
+  // static bool _chopper;
+  // static bool _on;
+
+  // onSlice = wholeSlice * dutyFactor / 100;
+  // offSlice = wholeSlice * (100 - dutyFactor) / 100;
+
   // return false if not currently running and not ready to run
   if (!(_readyToRun || _isRunning))
     return false;
@@ -137,24 +148,69 @@ bool StepperMRTO::run(void)
       _readyToRun = false;
       _isRunning = true;
       _lastStepStartTime = micros();
+      // _lastSliceStartTime = _lastStepStartTime;
+      // _chopper = false;
     }
 
     _now = micros();
 
     // reduce the torque by limiting the current flow to a shorter period than the whole step
+    // when using a motor driver this technique was not seen to be effective outside of a narrow range around 1000 microseconds
+    // jitter was seen outside of that range
+    // operation was seen to be smooth and very forceful within the narrow range
     if ((_now - _lastStepStartTime) >= _torqueInterval)
       release();
+
+    // the following two techniques were an attempt to overcome jitter observed at torque intervals outside of a narrow range
+    // that range was about 900 to 1100 or so
+    // the first technique uses an initial pulse followed by narrow on and off slices throughout the step period
+    // this is an attempt to simulate a 'chopper' style motor driver to limit current
+    // all three time periods could be variable
+    // not shown to have any effect in testing
+    // if ((_on && _chopper && ((_now - _lastSliceStartTime) > 100)) || (!_on && _chopper && ((_now - _lastSliceStartTime) > 600)))
+    // {
+    //   if (_on) release();
+    //   else stepMotor(_currentStep);
+    //   _on = !_on;
+    //   _lastSliceStartTime = micros();
+    // }
+    // if (!_chopper && ((_now - _lastStepStartTime) >= _torqueInterval))
+    // {
+    //   release();
+    //   _lastSliceStartTime = micros();
+    //   _chopper = true;
+    //   _on = false;
+    // }
+    // the second technique provides equal slices throughout the step period
+    // on and off times could be varied
+    // not shown to have any effect in testing
+    // if (_now - _lastSliceStartTime >= offSlice + onSlice)
+    // {
+    //   _lastSliceStartTime = micros();
+    //   stepMotor(_currentStep);
+    // }
+    // else
+    // {
+    //   if (_now - _lastSliceStartTime >= onSlice);
+    //   {
+    //     release();
+    //   }
+    // }
 
     // move only if the appropriate delay has passed:
     if ((_now - _lastStepStartTime) >= _stepInterval)
     {
+      // _chopper = false;
+
       // remember when this step started
       _lastStepStartTime = _now;
+      // _lastSliceStartTime = _lastStepStartTime;
+
       // increment or decrement the step number depending on direction
       if (_currentDirection)
       {
-        _currentStep++;
-        if (_currentStep == _stepsPerRevolution)
+        //_currentStep++;
+        if (++_currentStep == _stepsPerRevolution)
         {
           _currentStep = 0;
         }
@@ -165,11 +221,9 @@ bool StepperMRTO::run(void)
         {
           _currentStep = _stepsPerRevolution;
         }
-        _currentStep--; //TBD does this need to be moved up before the if?
+        _currentStep--;
       }
       // decrement the steps left to go and test for done
-      // _stepsLeftToGo--;
-
       if (--_stepsLeftToGo == 0) // done with the stroke if zero
       {
         release();                    // turn off the juice to reduce overheating
@@ -203,13 +257,13 @@ void StepperMRTO::stepMotor(int thisStep)
     digitalWrite(_motorBPlus, HIGH);
     digitalWrite(_motorBMinus, LOW);
     break;
-  case 2: //0101
+  case 2: // 0101
     digitalWrite(_motorAPlus, LOW);
     digitalWrite(_motorAMinus, HIGH);
     digitalWrite(_motorBPlus, LOW);
     digitalWrite(_motorBMinus, HIGH);
     break;
-  case 3: //1001
+  case 3: // 1001
     digitalWrite(_motorAPlus, HIGH);
     digitalWrite(_motorAMinus, LOW);
     digitalWrite(_motorBPlus, LOW);

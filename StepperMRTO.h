@@ -85,8 +85,9 @@ private:
   uint16_t _stepInterval;   // delay between steps, in ms, based on speed
   uint16_t _torqueInterval; // shortened interval to reduce torque and average current
   uint16_t _strokeSteps;    // steps to take in this run
-  unsigned long _now;
-  unsigned long _lastStepStartTime; // time stamp in us of when the last step was started
+  uint32_t _now;
+  uint32_t _lastStepStartTime; // time stamp in us of when the last step was started
+  // uint32_t _lastSliceStartTime;
   bool _isRunning;
   bool _readyToRun;
   bool _currentDirection;
