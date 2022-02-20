@@ -9,8 +9,7 @@
  used. Or the device can be removed and attached to a computer. Device must be removed from socket when downloading the entire program.
 
 
-  Pin assignments:
-  Revised for D13 as output not input. D13 is pulled low by internal LED attached to it.
+  Pin assignments (not BOOSTED):
    A0  stepper 1 switch
    A1  stepper 2 switch
    A2  stepper 3 switch
@@ -33,18 +32,49 @@
    D11 stepper 2 R/G LED - connect to anode of both R and G for device 1, active high
    D12 stepper 3 R/G LED - connect to anode of both R and G for device 2, active high
    D13 stepper 4 R/G LED - connect to anode of both R and G for device 3, active high
+
+  Pin assignments (BOOSTED):
+   A0  stepper 1 switch
+   A1  stepper 2 switch
+   A2  stepper 3 switch
+   A3  A+ stepper 1
+   A4  A- stepper 1
+   A5  B+ stepper 1
+   A6  A6 is analog input only
+   A7  A7 is analog input only
+   D0  LED mux red - connect to cathode of all red LED, active low
+   D1  LED mux green - connect to cathode of all green LED, active low
+   D2  A+ stepper 2
+   D3  A- stepper 2
+   D4  B+ stepper 2
+   D5  B- stepper 2
+   D6  A+ stepper 3
+   D7  A- stepper 3
+   D8  B+ stepper 3
+   D9  B- stepper 3
+   D10 stepper 1 R/G LED - connect to anode of both R and G for device 0, active high
+   D11 stepper 2 R/G LED - connect to anode of both R and G for device 1, active high
+   D12 stepper 3 R/G LED - connect to anode of both R and G for device 2, active high
+   D13 B- stepper 1
    */
 
+#define BOOSTED // define this (uncomment) if using motor driver - will be restricted to 3 devices
 #include <Arduino.h>
 #include <EEPROM.h>
 #include "StepperMRTO.h"
 
+#ifndef BOOSTED
 uint16_t const numSteppers = 4;
+#else
+uint16_t const numSteppers = 3;
+#endif
+
 uint16_t const stepsPerRevolution = 20; // number of steps per revolution
 bool direction = true;                  // when true travels in one direction, when false the other
 bool configMode = false;                // on reset, test switch 0 low to set configuration mode, else normal mode
 
 // motor pins
+#ifndef BOOSTED
 uint16_t const APlusPin = 0;
 uint16_t const BPlusPin = 1;
 uint16_t const AMinus1Pin = 2;
@@ -55,21 +85,53 @@ uint16_t const AMinus3Pin = 6;
 uint16_t const BMinus3Pin = 7;
 uint16_t const AMinus4Pin = 8;
 uint16_t const BMinus4Pin = 9;
+#else
+uint16_t const APlus1Pin = A3;
+uint16_t const AMinus1Pin = A4;
+uint16_t const BPlus1Pin = A5;
+uint16_t const BMinus1Pin = 13;
+uint16_t const APlus2Pin = 2;
+uint16_t const AMinus2Pin = 3;
+uint16_t const BPlus2Pin = 4;
+uint16_t const BMinus2Pin = 5;
+uint16_t const APlus3Pin = 6;
+uint16_t const AMinus3Pin = 7;
+uint16_t const BPlus3Pin = 8;
+uint16_t const BMinus3Pin = 9;
+#endif
 
 // switch pins
+#ifndef BOOSTED
 uint16_t const switchPin[4] = {A0, A1, A2, A3};
+#else
+uint16_t const switchPin[3] = {A0, A1, A2};
+#endif
 
 // LED pins
+#ifndef BOOSTED
 uint16_t const redLEDCathodePin = A4;
 uint16_t const greenLEDCathodePin = A5;
-uint16_t const ledAnodePin[4] = {10, 11, 12, 13};
+uint16_t const ledAnodePin[] = {10, 11, 12, 13};
+#else
+uint16_t const redLEDCathodePin = 0;
+uint16_t const greenLEDCathodePin = 1;
+uint16_t const ledAnodePin[] = {10, 11, 12};
+#endif
 
 // create an array of steppers with common A+ and B+ connections
+#ifndef BOOSTED
 StepperMRTO myStepper[] =
     {StepperMRTO(stepsPerRevolution, APlusPin, AMinus1Pin, BPlusPin, BMinus1Pin),
      StepperMRTO(stepsPerRevolution, APlusPin, AMinus2Pin, BPlusPin, BMinus2Pin),
      StepperMRTO(stepsPerRevolution, APlusPin, AMinus3Pin, BPlusPin, BMinus3Pin),
      StepperMRTO(stepsPerRevolution, APlusPin, AMinus4Pin, BPlusPin, BMinus4Pin)};
+#else
+// or not using commons if using a motor driver board
+StepperMRTO myStepper[] =
+    {StepperMRTO(stepsPerRevolution, APlus1Pin, AMinus1Pin, BPlus1Pin, BMinus1Pin),
+     StepperMRTO(stepsPerRevolution, APlus2Pin, AMinus2Pin, BPlus2Pin, BMinus2Pin),
+     StepperMRTO(stepsPerRevolution, APlus3Pin, AMinus3Pin, BPlus3Pin, BMinus3Pin)};
+#endif
 
 uint16_t const NOMINAL_SPEED = 1000;
 uint16_t const NOMINAL_STROKE = 500;
@@ -299,9 +361,14 @@ void configure()
     switch (getUpperChar())
     {
     case 'S':
-      Serial.println(F("Speed (rpm, valid value 1 - 2000, default = 1000)"));
+      Serial.println(F("Speed (rpm, valid value 100 - 2000, default = 1000)"));
+#ifndef BOOSTED
       Serial.println(F("Enter device (1 - 4) or 0 for all"));
-      devID = getNumber(0, 4);
+#else
+      Serial.println(F("Enter device (1 - 3) or 0 for all"));
+#endif
+
+      devID = getNumber(0, numSteppers);
       Serial.print(F("Enter value for "));
       if (devID == 0)
         Serial.println(F("all devices"));
@@ -310,7 +377,7 @@ void configure()
         Serial.print(F("device "));
         Serial.println(devID);
       }
-      eepByte = getNumber(1, 2000) / 10;
+      eepByte = getNumber(100, 2000) / 10;
       if (devID == 0)
         for (int i = 0; i < numSteppers; i++)
         {
@@ -326,8 +393,13 @@ void configure()
 
     case 'T':
       Serial.println(F("Throw (steps, valid value 200 - 800, default = 600, 1000 steps = 7mm)"));
+#ifndef BOOSTED
       Serial.println(F("Enter device (1 - 4) or 0 for all"));
-      devID = getNumber(0, 4);
+#else
+      Serial.println(F("Enter device (1 - 3) or 0 for all"));
+#endif
+
+      devID = getNumber(0, numSteppers);
       Serial.print(F("Enter value for "));
       if (devID == 0)
         Serial.println(F("all devices"));
@@ -352,9 +424,14 @@ void configure()
       break;
 
     case 'F':
-      Serial.println(F("Force (microseconds, valid value 800 - 2550, default = 1500)"));
+      Serial.println(F("Force (microseconds, valid value 100 - 2550, default = 1500)"));
+#ifndef BOOSTED
       Serial.println(F("Enter device (1 - 4) or 0 for all"));
-      devID = getNumber(0, 4);
+#else
+      Serial.println(F("Enter device (1 - 3) or 0 for all"));
+#endif
+
+      devID = getNumber(0, numSteppers);
       Serial.print(F("Enter value for "));
       if (devID == 0)
         Serial.println(F("all devices"));
@@ -363,7 +440,7 @@ void configure()
         Serial.print(F("device "));
         Serial.println(devID);
       }
-      eepByte = getNumber(800, 2550) / 10;
+      eepByte = getNumber(100, 2550) / 10;
       if (devID == 0)
         for (int i = 0; i < numSteppers; i++)
         {
@@ -379,8 +456,13 @@ void configure()
 
     case 'D':
       Serial.println(F("Direction (0 or 1, 1 reverses the normal direction of throw"));
+#ifndef BOOSTED
       Serial.println(F("Enter device (1 - 4) or 0 for all"));
-      devID = getNumber(0, 4);
+#else
+      Serial.println(F("Enter device (1 - 3) or 0 for all"));
+#endif
+
+      devID = getNumber(0, numSteppers);
       Serial.print(F("Enter value for "));
       if (devID == 0)
         Serial.println(F("all devices"));
@@ -404,11 +486,11 @@ void configure()
       break;
 
     case 'P':
-      Serial.println(F("Print current configuration")); // TBD
+      Serial.println(F("Speed, throw, force, reversed (0=normal)"));
       for (int i = 0; i < numSteppers; i++)
       {
         Serial.print("Device: ");
-        Serial.print(i+1);
+        Serial.print(i + 1);
         Serial.print(" ");
         eepByte = EEPROM.read(4 * i);
         Serial.print(eepByte * 10);
